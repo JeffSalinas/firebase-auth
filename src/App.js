@@ -3,6 +3,7 @@ import firebase from 'firebase/app';
 import 'firebase/auth';
 import firebaseConfig from './firebaseConfig';
 import './App.css';
+import { CLIENT_ID, API_KEY } from './API_Config';
 const app = firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 
@@ -13,27 +14,35 @@ function App() {
   const [ loginPassword, setLoginPassword ] = useState('');
   const [ loggedin, setLoggedin ] = useState(false);
 
-  useEffect(() => {
-    auth.onAuthStateChanged(setUser)
+  const DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest"];
+  const SCOPES = "https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events";
 
-    return () => auth.onAuthStateChanged(setUser)
+  useEffect(() => {
+    // auth.onAuthStateChanged(setUser);
+
+    // return () => auth.onAuthStateChanged(setUser);
+
+    // window.gapi.auth2.getAuthInstance().isSignedIn.listen(setUser)
+
+    // return () => window.gapi.auth2.getAuthInstance().isSignedIn.listen(setUser)
+    window.gapi.load('client:auth2', initClient);
   }, [])
 
   const setUser = (user) => {
-    console.log(user);
     user ? setLoggedin(true) : setLoggedin(false);
   }
 
   const createUser = (e) => {
     e.preventDefault();
-    auth.createUserWithEmailAndPassword(email, password)
+    auth.createUserWithEmailAndPassword(email, password);
 
     setEmail('');
     setPassword('');
   }
 
   const logout = () => {
-    auth.signOut();
+    // auth.signOut();
+    window.gapi.auth2.getAuthInstance().signOut();
   }
 
   const login = (e) => {
@@ -42,7 +51,70 @@ function App() {
     setLoginEmail('');
     setLoginPassword('');
   }
-  
+
+  const googleAuth = () => {
+    window.gapi.auth2.getAuthInstance().signIn();
+  }
+
+  const initClient = () => {
+    window.gapi.client.init({
+      apiKey: API_KEY,
+      clientId: CLIENT_ID,
+      discoveryDocs: DISCOVERY_DOCS,
+      scope: SCOPES
+    })
+    .catch(err => {
+      console.log(err)    
+    })
+  }
+
+  const getEvents = () => {
+    window.gapi.client.calendar.events.list({
+      calendarId: 'primary',
+      timeMin: (new Date()).toISOString(),
+      showDeleted: false,
+      singleEvents: true,
+      maxResults: 10,
+      orderBy: 'startTime'
+    })
+    .then(function (response) {
+      var events = response.result.items;
+
+      console.log(events);
+    })
+    .catch(err => {
+      console.log(err);
+    })
+  }
+
+  const postEvent = () => {
+    const event = {
+      summary: 'Successful Post!!!',
+      location: 'Galvanize',
+      description: 'this is the description',
+      start: {
+        dateTime: '2020-02-06T09:00:00-07:00',
+        timeZone: 'America/Los_Angeles'
+      },
+      end: {
+        dateTime: '2020-02-06T10:00:00-07:00',
+        timeZone: 'America/Los_Angeles'
+      },
+      attendees: [
+        { 'email': 'jeff.salinas.js@gmail.com' }
+      ]
+    };
+
+    var request = window.gapi.client.calendar.events.insert({
+      calendarId: 'primary',
+      resource: event
+    });
+
+    request.execute(function (newEvent) {
+      console.log('Event created: ' + newEvent.htmlLink);
+    });
+  }
+
   return (
     <div className="App">
       <div>
@@ -72,6 +144,10 @@ function App() {
 
       <button onClick={logout}>Log Out</button>
       {loggedin && <p>Logged in!!!</p>}
+
+      <button onClick={googleAuth}>Sign in With Google</button>
+      <button onClick={getEvents}>Get Events</button>
+      <button onClick={postEvent}>Post Event</button>
     </div>
   );
 }
