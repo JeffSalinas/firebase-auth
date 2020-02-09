@@ -1,59 +1,55 @@
 import React, { useState, useEffect } from 'react';
-import firebase from 'firebase/app';
-import 'firebase/auth';
-import firebaseConfig from './firebaseConfig';
+// import firebase from 'firebase/app';
+// import 'firebase/auth';
+// import firebaseConfig from './firebaseConfig';
 import './App.css';
 import { CLIENT_ID, API_KEY } from './API_Config';
-const app = firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
+// const app = firebase.initializeApp(firebaseConfig);
+// const auth = firebase.auth();
 
 function App() {
-  const [ email, setEmail ] = useState('');
-  const [ password, setPassword ] = useState('');
-  const [ loginEmail, setLoginEmail ] = useState('');
-  const [ loginPassword, setLoginPassword ] = useState('');
+  // const [ email, setEmail ] = useState('');
+  // const [ password, setPassword ] = useState('');
+  // const [ loginEmail, setLoginEmail ] = useState('');
+  // const [ loginPassword, setLoginPassword ] = useState('');
   const [ loggedin, setLoggedin ] = useState(false);
 
   const DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest"];
   const SCOPES = "https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events";
 
   useEffect(() => {
-    // auth.onAuthStateChanged(setUser);
-
-    // return () => auth.onAuthStateChanged(setUser);
-
-    // window.gapi.auth2.getAuthInstance().isSignedIn.listen(setUser)
-
-    // return () => window.gapi.auth2.getAuthInstance().isSignedIn.listen(setUser)
-    window.gapi.load('client:auth2', initClient);
+    window.gapi.load('client:auth2', initClient)
   }, [])
 
-  const setUser = (user) => {
-    user ? setLoggedin(true) : setLoggedin(false);
-  }
+  useEffect(() => {
+    //get data from database
+  }, [])
 
-  const createUser = (e) => {
-    e.preventDefault();
-    auth.createUserWithEmailAndPassword(email, password);
+  // const createUser = (e) => {
+  //   e.preventDefault();
+  //   auth.createUserWithEmailAndPassword(email, password);
 
-    setEmail('');
-    setPassword('');
-  }
+  //   setEmail('');
+  //   setPassword('');
+  // }
 
   const logout = () => {
-    // auth.signOut();
     window.gapi.auth2.getAuthInstance().signOut();
+    setLoggedin(false);
   }
 
-  const login = (e) => {
-    e.preventDefault();
-    auth.signInWithEmailAndPassword(loginEmail, loginPassword);
-    setLoginEmail('');
-    setLoginPassword('');
-  }
+  // const login = (e) => {
+  //   e.preventDefault();
+  //   auth.signInWithEmailAndPassword(loginEmail, loginPassword);
+  //   setLoginEmail('');
+  //   setLoginPassword('');
+  // }
 
   const googleAuth = () => {
-    window.gapi.auth2.getAuthInstance().signIn();
+    window.gapi.auth2.getAuthInstance().signIn()
+    .then(() => {
+      setLoggedin(window.gapi.auth2.getAuthInstance().currentUser.get().w3.U3)
+    })
   }
 
   const initClient = () => {
@@ -62,6 +58,14 @@ function App() {
       clientId: CLIENT_ID,
       discoveryDocs: DISCOVERY_DOCS,
       scope: SCOPES
+    })
+    .then(() => {
+      if (window.gapi.auth2.getAuthInstance().currentUser.get().El) {
+        setLoggedin(window.gapi.auth2.getAuthInstance().currentUser.get().w3.U3)
+      } else {
+        setLoggedin(false);
+        console.log('not signed in')
+      }
     })
     .catch(err => {
       console.log(err)    
@@ -93,11 +97,11 @@ function App() {
       location: 'Galvanize',
       description: 'this is the description',
       start: {
-        dateTime: '2020-02-06T09:00:00-07:00',
+        dateTime: '2020-02-09T09:00:00-07:00',
         timeZone: 'America/Los_Angeles'
       },
       end: {
-        dateTime: '2020-02-06T10:00:00-07:00',
+        dateTime: '2020-02-09T10:00:00-07:00',
         timeZone: 'America/Los_Angeles'
       },
       attendees: [
@@ -107,7 +111,8 @@ function App() {
 
     var request = window.gapi.client.calendar.events.insert({
       calendarId: 'primary',
-      resource: event
+      resource: event,
+      sendUpdates: 'all'
     });
 
     request.execute(function (newEvent) {
@@ -119,7 +124,7 @@ function App() {
     <div className="App">
       <div>
         Create User
-        <form onSubmit={createUser} >
+        {/* <form onSubmit={createUser} >
           <label>Email
             <input type="text" value={email} onChange={(e) => setEmail(e.target.value)} required />
           </label>
@@ -127,11 +132,11 @@ function App() {
             <input type="text" value={password} onChange={(e) => setPassword(e.target.value)} required/>
           </label>
           <input type="submit" value="Submit" />
-        </form>
+        </form> */}
       </div>
       <div>
         Log In
-        <form onSubmit={login} >
+        {/* <form onSubmit={login} >
           <label>Email
             <input type="text" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} required />
           </label>
@@ -139,7 +144,7 @@ function App() {
             <input type="text" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} required/>
           </label>
           <input type="submit" value="Submit" />
-        </form>
+        </form> */}
       </div>
 
       <button onClick={logout}>Log Out</button>
